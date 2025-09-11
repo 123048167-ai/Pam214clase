@@ -1,12 +1,18 @@
-var nombreDelusuario = "john";
-let lastname ="uribe";
+let passwordBD = "pepe123"
 
-nombreDelusuario ="pepe";
+let input = "pepe123"
 
-const PI = 3.1415;
+let result = input == passwordBD
 
-console.log(PI)
+console.log(result);
 
-let nombreDePersona = "gordon";
+if (result === true){ 
+   console.log("login Correcto");
+   } 
+  if(result === false) { 
+   console.log ("Login Incorrecto");
+   }
+
+
 
 
