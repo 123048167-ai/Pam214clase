@@ -1,3 +1,12 @@
-nombreDelusuario = "john";
+var nombreDelusuario = "john";
+let lastname ="uribe";
 
-console.log(nombreDelusuario)
+nombreDelusuario ="pepe";
+
+const PI = 3.1415;
+
+console.log(PI)
+
+let nombreDePersona = "gordon";
+
+
