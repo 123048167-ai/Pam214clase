@@ -7,7 +7,7 @@ export default function ImageBackScreen(){
     useEffect(()=>{
         const timer = setTimeout(() => {
       setShowSplash(false);
-    }, 4000);
+    }, 1000);
     return () => clearTimeout(timer);
     },[] );
 
@@ -28,8 +28,17 @@ export default function ImageBackScreen(){
              style={styles.background}
              >
                 <View style={styles.overlay}>
-          <Text style={styles.title}>Bienvenido!</Text>
+          <Text style={styles.title}> 
+            Nombre: Uribe uribe Jafet.
+            Profesion: Estudiante.
+            Descripcion: Soy un estudiante de la universidad politecnica del estado de queretaro, estudiando en la carrera de ingenieria de tecnologias e innovacion digita.
+            Estoy cursando 4to cuatrimestre de la carrera.
+            Tengo hasta el momento algunas certificaciones.
+            Correo Electronico: 123048167@upq.edu.mx
+            Numero de telefono: 4481106669
+          </Text>
           </View>
+
           </ImageBackground>
           </SafeAreaView>
 
@@ -72,4 +81,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
