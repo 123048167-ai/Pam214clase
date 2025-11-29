@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from "react";
 import {
   View,
@@ -21,6 +22,9 @@ export default function InsertUsuarioScreen() {
   const [loading, setLoading] = useState(true);
   const [guardando, setGuardando] = useState(false);
 
+  
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
+
   const cargarUsuarios = useCallback(async () => {
     try {
       setLoading(true);
@@ -33,7 +37,6 @@ export default function InsertUsuarioScreen() {
     }
   }, []);
 
-  
   useEffect(() => {
     const init = async () => {
       await controller.initialize();
@@ -46,7 +49,7 @@ export default function InsertUsuarioScreen() {
     return () => controller.removeListener(cargarUsuarios);
   }, []);
 
-  
+ 
   const handleInsertar = async () => {
     if (guardando) return;
 
@@ -68,7 +71,78 @@ export default function InsertUsuarioScreen() {
     }
   };
 
+  
+  const handleEditar = (usuario) => {
+    setUsuarioEditando(usuario);
+    setNombre(usuario.nombre);
+  };
+
+  
+  const handleCancelarEdicion = () => {
+    setUsuarioEditando(null);
+    setNombre("");
+  };
+
+  
+  const handleActualizar = async () => {
+    if (!usuarioEditando || guardando) return;
+
+    try {
+      setGuardando(true);
+
+      await controller.actualizarUsuario(usuarioEditando.id, nombre);
+
+      Alert.alert(
+        "Usuario Actualizado",
+        `Se actualizó el usuario #${usuarioEditando.id}`
+      );
+
+      setUsuarioEditando(null);
+      setNombre("");
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setGuardando(false);
+    }
+  };
+
  
+  const confirmarEliminar = (usuario) => {
+    if (guardando) return;
+
+    Alert.alert(
+      "Eliminar usuario",
+      `¿Seguro que deseas eliminar a "${usuario.nombre}" (ID: ${usuario.id})?`,
+      [
+        {
+          text: "Cancelar",
+          style: "cancel",
+        },
+        {
+          text: "Eliminar",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setGuardando(true);
+              await controller.eliminarUsuario(usuario.id);
+
+              if (usuarioEditando && usuarioEditando.id === usuario.id) {
+                setUsuarioEditando(null);
+                setNombre("");
+              }
+
+              Alert.alert("Usuario Eliminado", "El registro fue eliminado.");
+            } catch (error) {
+              Alert.alert("Error", error.message);
+            } finally {
+              setGuardando(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderUsuario = ({ item }) => (
     <View style={styles.userItem}>
       <View style={styles.userNumber}>
@@ -83,11 +157,29 @@ export default function InsertUsuarioScreen() {
         <Text style={styles.userDate}>
           {new Date(item.fecha_creacion).toLocaleDateString("es-MX")}
         </Text>
+
+        
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={styles.actionButtonEdit}
+            onPress={() => handleEditar(item)}
+            disabled={guardando}
+          >
+            <Text style={styles.actionButtonText}>Editar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButtonDelete}
+            onPress={() => confirmarEliminar(item)}
+            disabled={guardando}
+          >
+            <Text style={styles.actionButtonText}>Eliminar</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
 
- 
   return (
     <View style={styles.container}>
       <Text style={styles.title}> INSERT & SELECT</Text>
@@ -99,7 +191,9 @@ export default function InsertUsuarioScreen() {
       </Text>
 
       <View style={styles.insertSection}>
-        <Text style={styles.sectionTitle}> Insertar Usuario</Text>
+        <Text style={styles.sectionTitle}>
+          {usuarioEditando ? "Editar Usuario" : "Insertar Usuario"}
+        </Text>
 
         <TextInput
           style={styles.input}
@@ -111,23 +205,38 @@ export default function InsertUsuarioScreen() {
 
         <TouchableOpacity
           style={[styles.button, guardando && styles.buttonDisabled]}
-          onPress={handleInsertar}
+          onPress={usuarioEditando ? handleActualizar : handleInsertar}
           disabled={guardando}
         >
           <Text style={styles.buttonText}>
-            {guardando ? " Guardando..." : "Agregar Usuario"}
+            {guardando
+              ? "Procesando..."
+              : usuarioEditando
+              ? "Actualizar Usuario"
+              : "Agregar Usuario"}
           </Text>
         </TouchableOpacity>
+
+        
+        {usuarioEditando && (
+          <TouchableOpacity
+            style={[styles.buttonCancel, guardando && styles.buttonDisabled]}
+            onPress={handleCancelarEdicion}
+            disabled={guardando}
+          >
+            <Text style={styles.buttonCancelText}>Cancelar edición</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
-     
-      <View style={styles.selectSection}>
+      <View className="selectSection" style={styles.selectSection}>
         <View style={styles.selectHeader}>
           <Text style={styles.sectionTitle}>Lista de Usuarios</Text>
 
           <TouchableOpacity
             style={styles.refreshButton}
             onPress={cargarUsuarios}
+            disabled={loading || guardando}
           >
             <Text style={styles.refreshText}>Recargar</Text>
           </TouchableOpacity>
@@ -225,6 +334,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     alignItems: "center",
+    marginBottom: 10,
   },
   buttonDisabled: {
     backgroundColor: "#ccc",
@@ -233,6 +343,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  buttonCancel: {
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  buttonCancelText: {
+    color: "#666",
+    fontSize: 15,
+    fontWeight: "500",
   },
   selectHeader: {
     flexDirection: "row",
@@ -298,6 +421,30 @@ const styles = StyleSheet.create({
   userDate: {
     fontSize: 12,
     color: "#666",
+  },
+  
+  actionsRow: {
+    flexDirection: "row",
+    marginTop: 8,
+    gap: 8,
+  },
+  actionButtonEdit: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    backgroundColor: "#007AFF",
+    marginRight: 8,
+  },
+  actionButtonDelete: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    backgroundColor: "#FF3B30",
+  },
+  actionButtonText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "500",
   },
   emptyContainer: {
     alignItems: "center",

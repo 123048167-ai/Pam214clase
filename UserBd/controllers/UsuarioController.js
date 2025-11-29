@@ -1,3 +1,4 @@
+
 import Usuario from "../models/usuario";
 import DatabaseService from "../database/DatabaseService";
 
@@ -10,7 +11,6 @@ export default class UsuarioController {
     await DatabaseService.initialize();
   }
 
- 
   async obtenerUsuarios() {
     const data = await DatabaseService.getAll();
     return data.map(
@@ -28,7 +28,21 @@ export default class UsuarioController {
     return new Usuario(nuevo.id, nuevo.nombre, nuevo.fecha_creacion);
   }
 
- 
+  
+  async actualizarUsuario(id, nombre) {
+    Usuario.validar(nombre);
+
+    await DatabaseService.update(id, nombre.trim());
+
+    this.notifyListeners();
+  }
+
+  async eliminarUsuario(id) {
+    await DatabaseService.remove(id);
+
+    this.notifyListeners();
+  }
+
   addListener(listener) {
     this.listeners.push(listener);
   }

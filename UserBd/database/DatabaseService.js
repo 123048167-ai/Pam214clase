@@ -1,3 +1,4 @@
+
 import * as SQLite from "expo-sqlite";
 import { Platform } from "react-native";
 
@@ -20,14 +21,14 @@ class DatabaseService {
     }
   }
 
-  
   async getAll() {
     if (Platform.OS === "web") return [];
 
-    return await this.db.getAllAsync("SELECT * FROM usuarios ORDER BY id DESC");
+    return await this.db.getAllAsync(
+      "SELECT * FROM usuarios ORDER BY id DESC"
+    );
   }
 
- 
   async add(nombre) {
     const fecha = new Date().toISOString();
 
@@ -42,6 +43,27 @@ class DatabaseService {
       nombre,
       fecha_creacion: fecha,
     };
+  }
+
+  
+  async update(id, nombre) {
+    if (Platform.OS === "web") return;
+
+    await this.db.runAsync(
+      `UPDATE usuarios SET nombre = ? WHERE id = ?`,
+      nombre,
+      id
+    );
+  }
+
+ 
+  async remove(id) {
+    if (Platform.OS === "web") return;
+
+    await this.db.runAsync(
+      `DELETE FROM usuarios WHERE id = ?`,
+      id
+    );
   }
 }
 
